@@ -1,0 +1,29 @@
+{
+  "network": "testnet",
+  "deployer_identity": "nova-deployer",
+  "deployer_address": "GABW3E5FDCCM7Q2BBIBHE5LFXR4KOO5FUC7LGWWUPVTV4WQJANDIBV5T",
+  "contracts": {
+    "nova": "CCKDS3RAH5T2XYCZWVRPVK7MXYODB4ZGBZX7MNLOQEIWZNHOXOF4JUS4",
+    "soroswap_adapter": "CBUXWJUFVOYJ4TQGXDOHBN7EZFG52CGVZVGWE5E4QCOY2Y5EVLEVEYV4",
+    "test_sep40_oracle": "CD6TISZMHSGNIUZXCESUIGZHXRLOY6QMCLT34ZS66LDLLRFUH2IYJIJR",
+    "soroswap_factory": "CDFD6WZN5JP4O62SSTX6J4X322BNGLBBLGQSAYEOU36MK7OGOYJOVXEY",
+    "soroswap_router": "CBAIS4UEFI4YC6K7CRE2XAFSKR3FDT7KCDA5A3SNXIN4H3DDF44MY7D2",
+    "soroswap_pair_wasm_hash": "7bc8129bab3a1743fc31854aeffe10e8a20365091c12f64122578e04a0c5137d",
+    "soroswap_pair_for_base_quote": "CBTC2KYQ22UELWEXK2DNQY6DA2M27JQUZR3L7R5S25J7MI2QFJMHZH5P"
+  },
+  "tokens": {
+    "base_TLITH": "CCJ7PJWGNO26P3YL76F2SUXCNV6EOBM6JS6PN5MAUQEZSLBHXPCBLCWY",
+    "quote_TUSDC": "CBGRV2MJHBM2U3SNWGBGITJLKCTI7PBROUTI7HWQGD2RPPT4TLEXBHQY",
+    "bond_TBOND": "CDESIITZRCATXVFJS4DQOFY47457EEFWUQVXHPS6LTNWJUKO2SIPWCHS"
+  },
+  "market_0": {
+    "symbol": "LITH",
+    "create_market_tx": "dc1d316c07d37dd00854c0a75c0a7416e336f4a69311279e0c3bf6501aa502f9",
+    "signers": ["nova-signer-1", "nova-signer-2", "nova-signer-3"],
+    "history": ["created", "Ready/Active via 3 intents + checkpoint", "swap drained quote side", "Degraded, transfers halted (#9)"]
+  },
+  "warnings": [
+    "test_sep40_oracle is admin-set and TEST ONLY. It is not a verified SEP-40 feed and must not be allowlisted in production.",
+    "The Soroswap contracts were deployed by this project from github.com/soroswap/core. They are not confirmed to be the official Soroswap testnet deployment."
+  ]
+}

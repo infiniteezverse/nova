@@ -1,0 +1,43 @@
+{
+  "network": "testnet",
+  "current": "v2",
+  "deployer_identity": "nova-deployer",
+  "deployer_address": "GABW3E5FDCCM7Q2BBIBHE5LFXR4KOO5FUC7LGWWUPVTV4WQJANDIBV5T",
+  "v2": {
+    "contracts": {
+      "nova": "CDSN2U5SG3YU27YPNKMKHJEPVFVPVA2BYOWDBYRTC72QPG3HYOVHK5ME",
+      "lending_vault": "CCMVZHUOGXOOM6ANLESIDX4S3KRQHKQQOIPIXIXS7UCQJFGOXJQYEV2N",
+      "soroswap_adapter": "CBUXWJUFVOYJ4TQGXDOHBN7EZFG52CGVZVGWE5E4QCOY2Y5EVLEVEYV4",
+      "test_sep40_oracle": "CD6TISZMHSGNIUZXCESUIGZHXRLOY6QMCLT34ZS66LDLLRFUH2IYJIJR",
+      "soroswap_router": "CBAIS4UEFI4YC6K7CRE2XAFSKR3FDT7KCDA5A3SNXIN4H3DDF44MY7D2"
+    },
+    "allowlists": {
+      "oracles": ["CD6TISZMHSGNIUZXCESUIGZHXRLOY6QMCLT34ZS66LDLLRFUH2IYJIJR"],
+      "liquidity": ["CBUXWJUFVOYJ4TQGXDOHBN7EZFG52CGVZVGWE5E4QCOY2Y5EVLEVEYV4"],
+      "settlers": ["CCMVZHUOGXOOM6ANLESIDX4S3KRQHKQQOIPIXIXS7UCQJFGOXJQYEV2N"]
+    },
+    "tokens": {
+      "base_TLITH": "CCJ7PJWGNO26P3YL76F2SUXCNV6EOBM6JS6PN5MAUQEZSLBHXPCBLCWY",
+      "quote_TUSDC_loan_token": "CBGRV2MJHBM2U3SNWGBGITJLKCTI7PBROUTI7HWQGD2RPPT4TLEXBHQY",
+      "bond_TBOND": "CDESIITZRCATXVFJS4DQOFY47457EEFWUQVXHPS6LTNWJUKO2SIPWCHS"
+    },
+    "market_0": {
+      "symbol": "LITH",
+      "signers": ["nova-signer-1", "nova-signer-2", "nova-signer-3"],
+      "history": [
+        "created with 1000-unit bond",
+        "3 signed intents, checkpoint -> Active",
+        "vault: 100000 collateral deposited, 50000 borrowed",
+        "oracle set to 0.6 (test feed), position underwater",
+        "live swap of 8e9 base in, depth 7.4e9 < 9e9, checkpoint -> Degraded",
+        "liquidate(repay 60000) while Degraded: repaid 25000, seized 43749, tx 54b2b5436e29ef0982de7adc102f0b34133e64a2777a82ab0fac5280e5ce589f",
+        "liquidator normal transfer rejected with TransferHalted (#9)"
+      ]
+    }
+  },
+  "warnings": [
+    "test_sep40_oracle is admin-set and TEST ONLY. It is not a verified SEP-40 feed and must not be allowlisted in production.",
+    "Soroswap contracts were deployed by this project from github.com/soroswap/core. They are not confirmed to be the official Soroswap testnet deployment.",
+    "The vault-as-sender auth (vault calling NOVA settle_transfer and transfer) worked on live testnet in v2."
+  ]
+}

@@ -1,0 +1,11 @@
+[package]
+name = "nova-integration"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+doctest = false
+
+[dependencies]
+soroban-sdk = { version = "29.0.1", features = ["testutils"] }

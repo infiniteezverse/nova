@@ -1,0 +1,13 @@
+{
+  "network": "testnet",
+  "at": "2026-10-25T22:36:51Z",
+  "nova": "CDSN2U5SG3YU27YPNKMKHJEPVFVPVA2BYOWDBYRTC72QPG3HYOVHK5ME",
+  "vault": "CCMVZHUOGXOOM6ANLESIDX4S3KRQHKQQOIPIXIXS7UCQJFGOXJQYEV2N",
+  "market": "2",
+  "liquidation": {
+    "repaid": "25000",
+    "seized": "43749",
+    "tx": "c7b11c9e53f5550b32592fab82ba20268bf2aa21d83a2c9cf8ca23c6ea4dec67"
+  },
+  "result": "PASS"
+}

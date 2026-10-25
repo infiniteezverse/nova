@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NOVA Testnet Snapshot</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f5f4ef;
+    --panel: #fffffe;
+    --fg: #17181c;
+    --muted: #5d6170;
+    --line: #dcdbd3;
+    --accent: #2f4fd1;
+    --ok: #17773b;
+    --warn: #9a5b00;
+    --bad: #b3261e;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--sans);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #101216;
+      --panel: #171a20;
+      --fg: #e7e8ec;
+      --muted: #9aa0ad;
+      --line: #2a2e38;
+      --accent: #8fa6ff;
+      --ok: #4fd68a;
+      --warn: #f0b35a;
+      --bad: #ff8a80;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101216;
+    --panel: #171a20;
+    --fg: #e7e8ec;
+    --muted: #9aa0ad;
+    --line: #2a2e38;
+    --accent: #8fa6ff;
+    --ok: #4fd68a;
+    --warn: #f0b35a;
+    --bad: #ff8a80;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.5;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 24px 48px;
+  }
+  main { max-width: 960px; margin: 0 auto; display: grid; gap: 20px; }
+  h1 { font-size: 1.6rem; margin: 0; text-wrap: balance; }
+  h2 { font-size: 1.05rem; margin: 0 0 10px; }
+  p { margin: 0; max-width: 65ch; }
+  .muted { color: var(--muted); }
+  .small { font-size: 0.88rem; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; min-width: 0; }
+  .banner { border-left: 4px solid var(--warn); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; font-size: 0.82rem; }
+  .chip.bad { color: var(--bad); border-color: var(--bad); }
+  .chip.ok { color: var(--ok); border-color: var(--ok); }
+  .chip.warn { color: var(--warn); border-color: var(--warn); }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .mono { font-family: var(--mono); font-size: 0.82rem; word-break: break-all; }
+  ol, ul { margin: 0; padding-left: 1.2em; display: grid; gap: 8px; }
+  a { color: var(--accent); }
+  .state-Degraded { color: var(--bad); font-weight: 600; }
+  .state-Active { color: var(--ok); font-weight: 600; }
+  .state-Discovery { color: var(--warn); font-weight: 600; }
+  .grid2 { display: grid; gap: 20px; grid-template-columns: 1fr; }
+  @media (min-width: 760px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+  code { font-family: var(--mono); font-size: 0.85em; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <p class="muted small">NOVA · State-Bound Asset protocol · Stellar testnet</p>
+  <h1>Testnet snapshot, not a live feed</h1>
+</header>
+
+<section class="panel banner">
+  <h2>Read this first</h2>
+  <p>
+    These numbers were read from Stellar testnet at <span id="snap-time"></span> with read-only simulations.
+    They do not update. Nothing on this page sends a transaction or holds a key.
+  </p>
+  <div class="chips" style="margin-top:12px">
+    <span class="chip warn">Unaudited prototype</span>
+    <span class="chip warn">Test oracle, one admin key</span>
+    <span class="chip warn">Testnet tokens, no value</span>
+    <span class="chip">Hackathon MVP</span>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>What this is</h2>
+  <p>
+    A State-Bound Asset (SBA) is a token whose transfers are gated by on-chain health checks.
+    Here, an asset's market is checked against its oracle price, its pool's spread and depth, and its signer count.
+    When a check fails, the contract halts the parts of the market that need that check to pass.
+  </p>
+</section>
+
+<section class="panel">
+  <h2>Markets on NOVA v2</h2>
+  <div class="scroll">
+  <table>
+    <thead><tr>
+      <th>Market</th><th>State</th><th class="num">Signers</th><th class="num">Price</th>
+      <th class="num">Spread</th><th class="num">Depth</th><th>Bond unlocks (UTC)</th><th>Notes</th>
+    </tr></thead>
+    <tbody id="markets"></tbody>
+  </table>
+  </div>
+  <p class="small muted" style="margin-top:10px">
+    Depth is the pool's quote-side reserve, in whole units (raw ÷ 10⁷). The market threshold is 9,000 units.
+    Price 1.0 means the oracle reads one loan unit per SBA unit.
+  </p>
+</section>
+
+<section class="panel">
+  <h2>Constitution: rules and their status for market 2</h2>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Rule</th><th>What it checks</th><th>Limit</th><th>Live value</th><th>Status</th></tr></thead>
+    <tbody id="rules"></tbody>
+  </table>
+  </div>
+  <p class="small muted" style="margin-top:10px">
+    Rule labels follow the design spec. Rule 09 covers early withdrawal and is only partly implemented (see gaps below).
+  </p>
+</section>
+
+<section class="grid2">
+  <div class="panel">
+    <h2>Lending vault</h2>
+    <table>
+      <tbody id="vault"></tbody>
+    </table>
+    <p class="small muted" style="margin-top:10px">
+      Collateral is SBA. Borrowing is limited to 50% of collateral value at the oracle price.
+      Liquidation pays the liquidator a 5% bonus.
+    </p>
+  </div>
+  <div class="panel">
+    <h2>Soroswap pool (via adapter)</h2>
+    <table>
+      <tbody id="pool"></tbody>
+    </table>
+    <p class="small muted" style="margin-top:10px">
+      Bid and ask come from a 1-unit probe through the router. Depth is the quote reserve. The pool is one this project created on testnet.
+    </p>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Recorded liquidation, run on testnet</h2>
+  <p>
+    The sequence below ran on testnet. The last recorded run is market 2.
+    Each run creates a new market, so these exact numbers belong to that run only.
+  </p>
+  <ol style="margin-top:12px" id="sequence"></ol>
+</section>
+
+<section class="panel">
+  <h2>Contracts (testnet)</h2>
+  <div class="scroll">
+  <table>
+    <tbody id="contracts"></tbody>
+  </table>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>What this page does not show</h2>
+  <ul>
+    <li><strong>The oracle is a test feed.</strong> One admin key sets its price. It proves the wiring, not real market data. It is not a verified SEP-40 feed, and it should never be on a production allowlist.</li>
+    <li><strong>The pool is ours.</strong> The Soroswap factory, router and pair were built from Soroswap's source and deployed by this project. They are not confirmed as the official testnet deployment.</li>
+    <li><strong>Signers and the liquidator use local test keys.</strong> The demo signs with command-line keys. The Freighter wallet flow has not been tested in a browser.</li>
+    <li><strong>Each demo run changes live state.</strong> It creates a market, locks a 1,000-unit test bond for a day, moves pool depth with swaps and liquidity, and changes the oracle price.</li>
+    <li><strong>A failed run left market 1 behind.</strong> It is in Discovery with 0 signers, and its bond stays locked until its unlock time. Nothing uses it.</li>
+    <li><strong>Degraded does not mean safe for lenders.</strong> A liquidator who seizes SBA while the market is Degraded cannot sell it until the market recovers. A long Degraded period can leave bad debt that no one clears.</li>
+    <li><strong>Paused freezes liquidation.</strong> With a dead oracle there is no valid price, so the contract refuses liquidations. Bad debt can build during a Paused period.</li>
+    <li><strong>Slashing is not implemented.</strong> The spec's fraud penalty needs a way to prove fraud, and nothing in the contract does that.</li>
+    <li><strong>The early-withdrawal pause (Rule 09) is not implemented as specified.</strong> On Soroban, a call that reverts rolls back everything it wrote. So the contract can refuse an early withdrawal but cannot record a pause in the same call. Fixing this needs a separate, non-reverting function.</li>
+    <li><strong>Interest is zero.</strong> Lenders earn nothing and borrowers pay nothing.</li>
+    <li><strong>The allowlists are fixed at deploy.</strong> Oracles, adapters and settlers are set once. Changing any of them means redeploying NOVA.</li>
+    <li><strong>No audit.</strong> Tests are 15 unit tests for NOVA and 9 integration tests against compiled WASM. They cover the paths we thought of, not a review by a third party.</li>
+  </ul>
+</section>
+
+<section class="panel">
+  <h2>Check it yourself</h2>
+  <p class="small muted">Read-only, needs the Stellar CLI and no account. Replace the contract ID with one from the table above.</p>
+  <pre class="mono" style="overflow-x:auto;margin:10px 0 0">stellar contract invoke --id CDSN2U5SG3YU27YPNKMKHJEPVFVPVA2BYOWDBYRTC72QPG3HYOVHK5ME --network testnet -- observe --market_id 2</pre>
+</section>
+
+</main>
+
+<script>
+const SNAP = {
+  time: "2026-10-25T22:45:39Z",
+  nowUnix: 1792968339,
+  probeBase: 10000000,
+  markets: [
+    { id: 0, state: "Degraded", signers: 3, target: 3, lastCheckpoint: 1792967427, unlock: 1793053727, released: false,
+      health: "Degraded", price: 6000000, oracleTs: 1792967759, spreadBps: 64, depth: 8714962520, note: "Oracle set to 0.6 and swaps run. Earlier v2 walkthrough." },
+    { id: 1, state: "Discovery", signers: 0, target: 3, lastCheckpoint: 1792967667, unlock: 1793054067, released: false,
+      health: "Degraded", price: 6000000, oracleTs: 1792967759, spreadBps: 64, depth: 8714962520, note: "Left behind by a failed demo run. No signers. Bond locked." },
+    { id: 2, state: "Degraded", signers: 3, target: 3, lastCheckpoint: 1792967797, unlock: 1793054112, released: false,
+      health: "Degraded", price: 6000000, oracleTs: 1792967759, spreadBps: 64, depth: 8714962520, note: "Last recorded run. Liquidation settled here." }
+  ],
+  minDepth: 9000000000,
+  maxSpreadBps: 350,
+  maxOracleAge: 86400,
+  bondAmount: 10000000000,
+  vault: { cash: 450000, ltvBps: 5000, bonusBps: 500, loanToken: "CBGRV2MJHBM2U3SNWGBGITJLKCTI7PBROUTI7HWQGD2RPPT4TLEXBHQY" },
+  pool: { bid: 1888464, ask: 1900673, depth: 8714962520 },
+  run: { market: 2, repaid: 25000, seized: 43749, tx: "c7b11c9e53f5550b32592fab82ba20268bf2aa21d83a2c9cf8ca23c6ea4dec67" },
+  contracts: [
+    ["NOVA v2", "CDSN2U5SG3YU27YPNKMKHJEPVFVPVA2BYOWDBYRTC72QPG3HYOVHK5ME"],
+    ["Lending vault", "CCMVZHUOGXOOM6ANLESIDX4S3KRQHKQQOIPIXIXS7UCQJFGOXJQYEV2N"],
+    ["Soroswap adapter", "CBUXWJUFVOYJ4TQGXDOHBN7EZFG52CGVZVGWE5E4QCOY2Y5EVLEVEYV4"],
+    ["Test oracle (admin-set)", "CD6TISZMHSGNIUZXCESUIGZHXRLOY6QMCLT34ZS66LDLLRFUH2IYJIJR"],
+    ["Soroswap router (ours)", "CBAIS4UEFI4YC6K7CRE2XAFSKR3FDT7KCDA5A3SNXIN4H3DDF44MY7D2"],
+    ["Soroswap factory (ours)", "CDFD6WZN5JP4O62SSTX6J4X322BNGLBBLGQSAYEOU36MK7OGOYJOVXEY"]
+  ]
+};
+
+const el = (tag, attrs = {}, text) => {
+  const n = document.createElement(tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (text !== undefined) n.textContent = text;
+  return n;
+};
+const utc = (s) => new Date(s * 1000).toISOString().replace("T", " ").slice(0, 16) + " UTC";
+const units = (raw) => (raw / 1e7).toLocaleString("en-US", { maximumFractionDigits: 2 });
+const explorer = (id) => `https://stellar.expert/explorer/testnet/contract/${id}`;
+const chip = (text, cls) => el("span", { class: "chip " + cls }, text);
+
+document.getElementById("snap-time").textContent = utc(SNAP.nowUnix);
+
+// Markets
+const mk = document.getElementById("markets");
+for (const m of SNAP.markets) {
+  const tr = el("tr");
+  tr.append(
+    el("td", {}, "#" + m.id + " LITH"),
+    el("td", { class: "state-" + m.state }, m.state),
+    el("td", { class: "num" }, m.signers + " / " + m.target),
+    el("td", { class: "num" }, (m.price / 1e7).toFixed(2)),
+    el("td", { class: "num" }, m.spreadBps + " bps"),
+    el("td", { class: "num" }, units(m.depth)),
+    el("td", {}, utc(m.unlock)),
+    el("td", { class: "small" }, m.note)
+  );
+  mk.append(tr);
+}
+
+// Rules for market 2
+const m2 = SNAP.markets.find((m) => m.id === 2);
+const ageSec = SNAP.nowUnix - m2.oracleTs;
+const rules = [
+  ["01/02", "Oracle is fresh (not older than the limit)", SNAP.maxOracleAge + " s", ageSec + " s old", ageSec <= SNAP.maxOracleAge ? ["Passing", "ok"] : ["Failing: market pauses", "bad"]],
+  ["03", "Spread between bid and ask", SNAP.maxSpreadBps + " bps", m2.spreadBps + " bps", m2.spreadBps <= SNAP.maxSpreadBps ? ["Passing", "ok"] : ["Failing: degrades", "warn"]],
+  ["04", "Pool quote depth", units(SNAP.minDepth) + " units", units(m2.depth) + " units", m2.depth >= SNAP.minDepth ? ["Passing", "ok"] : ["Failing: degrades", "bad"]],
+  ["06", "Unique intent signers reach target", "3 signers", m2.signers + " signers", m2.signers >= m2.target ? ["Passing", "ok"] : ["Not yet met", "warn"]],
+  ["Bond", "Bond stays locked until unlock time", utc(m2.unlock), m2.released ? "Released" : "Locked", ["Implemented", "ok"]],
+  ["09", "Early withdrawal halts issuance", "Revert and pause", "Revert only", ["Partial: no persistent pause", "warn"]],
+  ["Fraud", "Slashing of the bond on proven fraud", "Not defined", "Not implemented", ["Open gap", "bad"]]
+];
+const rt = document.getElementById("rules");
+for (const [id, what, limit, live, [status, cls]] of rules) {
+  const tr = el("tr");
+  tr.append(el("td", {}, id), el("td", {}, what), el("td", {}, limit), el("td", {}, live), el("td", {}, ""));
+  tr.lastChild.append(chip(status, cls));
+  rt.append(tr);
+}
+
+// Vault
+const vt = document.getElementById("vault");
+for (const [k, v] of [
+  ["Loan token cash", SNAP.vault.cash.toLocaleString("en-US") + " units"],
+  ["Loan-to-value", (SNAP.vault.ltvBps / 100) + " %"],
+  ["Liquidation bonus", (SNAP.vault.bonusBps / 100) + " %"],
+  ["Close factor", "50 % of debt per call"],
+  ["Loan token", SNAP.vault.loanToken]
+]) {
+  const tr = el("tr");
+  tr.append(el("th", {}, k), el("td", k === "Loan token" ? { class: "mono" } : {}, v));
+  vt.append(tr);
+}
+
+// Pool
+const pt = document.getElementById("pool");
+for (const [k, v] of [
+  ["Bid (sell 1 unit)", (SNAP.pool.bid / 1e7).toFixed(7)],
+  ["Ask (buy 1 unit)", (SNAP.pool.ask / 1e7).toFixed(7)],
+  ["Quote depth", units(SNAP.pool.depth) + " units"],
+  ["Spread at probe", ((SNAP.pool.ask - SNAP.pool.bid) * 10000 / ((SNAP.pool.ask + SNAP.pool.bid) / 2)).toFixed(0) + " bps"]
+]) {
+  const tr = el("tr");
+  tr.append(el("th", {}, k), el("td", {}, v));
+  pt.append(tr);
+}
+
+// Sequence
+const seq = document.getElementById("sequence");
+for (const step of [
+  "Create a market with a 1,000-unit bond.",
+  "Three signers each sign an intent. A checkpoint moves the market to Active.",
+  "Deposit 100,000 SBA as collateral and borrow 50,000.",
+  "The oracle price drops to 0.6. The position is underwater.",
+  "Swaps drain the pool's quote depth below 9,000 units. A checkpoint moves the market to Degraded.",
+  "A liquidator repays " + SNAP.run.repaid.toLocaleString("en-US") + " and receives " + SNAP.run.seized.toLocaleString("en-US") + " SBA while the market is Degraded.",
+  "The liquidator's ordinary transfer is refused with error #9 (TransferHalted)."
+]) {
+  seq.append(el("li", {}, step));
+}
+const li = el("li");
+li.append("Liquidation transaction: ");
+const a = el("a", { href: "https://stellar.expert/explorer/testnet/tx/" + SNAP.run.tx, target: "_blank", rel: "noopener" }, SNAP.run.tx);
+a.className = "mono";
+li.append(a);
+seq.append(li);
+
+// Contracts
+const ct = document.getElementById("contracts");
+for (const [name, id] of SNAP.contracts) {
+  const tr = el("tr");
+  const link = el("a", { href: explorer(id), target: "_blank", rel: "noopener", class: "mono" }, id);
+  tr.append(el("th", {}, name), el("td", {}, ""));
+  tr.lastChild.append(link);
+  ct.append(tr);
+}
+</script>
+</body>
+</html>
