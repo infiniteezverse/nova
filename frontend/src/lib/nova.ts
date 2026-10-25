@@ -55,22 +55,26 @@ function variant(value: unknown): string {
   return String(value);
 }
 
-function u64(value: number | bigint): xdr.ScVal {
+export function u64(value: number | bigint): xdr.ScVal {
   return nativeToScVal(BigInt(value), { type: "u64" });
 }
 
-function addr(value: string): xdr.ScVal {
+export function i128(value: bigint): xdr.ScVal {
+  return nativeToScVal(value, { type: "i128" });
+}
+
+export function addr(value: string): xdr.ScVal {
   return new Address(value).toScVal();
 }
 
-/** Simulate a read-only call and decode its return value. */
-async function read<T>(method: string, args: xdr.ScVal[]): Promise<T> {
+/** Simulate a read-only call on any contract and decode its return value. */
+export async function readFrom<T>(contractId: string, method: string, args: xdr.ScVal[]): Promise<T> {
   const account = new Account(READ_SOURCE, "0");
   const tx = new TransactionBuilder(account, {
     fee: "100000",
     networkPassphrase: NETWORK_PASSPHRASE,
   })
-    .addOperation(contract.call(method, ...args))
+    .addOperation(new Contract(contractId).call(method, ...args))
     .setTimeout(30)
     .build();
 
@@ -80,6 +84,11 @@ async function read<T>(method: string, args: xdr.ScVal[]): Promise<T> {
     throw new Error(`${method} failed: ${reason}`);
   }
   return scValToNative(sim.result.retval) as T;
+}
+
+/** Simulate a read-only call on NOVA. */
+async function read<T>(method: string, args: xdr.ScVal[]): Promise<T> {
+  return readFrom<T>(NOVA_CONTRACT_ID, method, args);
 }
 
 export async function fetchState(marketId: number): Promise<string> {
@@ -114,7 +123,12 @@ export async function fetchMarket(marketId: number): Promise<MarketSummary> {
   };
 }
 
-export type WriteResult = { hash: string; status: "SUCCESS" | "FAILED" };
+export type WriteResult = {
+  hash: string;
+  status: "SUCCESS" | "FAILED";
+  /** The contract's return value, decoded, when the transaction succeeded. */
+  value?: unknown;
+};
 
 /** Takes an unsigned transaction XDR and returns the signed XDR. */
 export type SignXdr = (xdrString: string, wallet: string) => Promise<string>;
@@ -131,8 +145,9 @@ export const freighterSign: SignXdr = async (xdrString, wallet) => {
   return signed.signedTxXdr;
 };
 
-/** Build, sign, submit, and wait for the ledger result. */
-async function write(
+/** Build, sign, submit, and wait for the ledger result. Works for any contract. */
+export async function writeTo(
+  contractId: string,
   wallet: string,
   method: string,
   args: xdr.ScVal[],
@@ -143,7 +158,7 @@ async function write(
     fee: "100000",
     networkPassphrase: NETWORK_PASSPHRASE,
   })
-    .addOperation(contract.call(method, ...args))
+    .addOperation(new Contract(contractId).call(method, ...args))
     .setTimeout(60)
     .build();
 
@@ -159,7 +174,8 @@ async function write(
   for (let attempt = 0; attempt < 30; attempt++) {
     const res = await server.getTransaction(sent.hash);
     if (res.status === rpc.Api.GetTransactionStatus.SUCCESS) {
-      return { hash: sent.hash, status: "SUCCESS" };
+      const value = res.returnValue ? scValToNative(res.returnValue) : undefined;
+      return { hash: sent.hash, status: "SUCCESS", value };
     }
     if (res.status === rpc.Api.GetTransactionStatus.FAILED) {
       return { hash: sent.hash, status: "FAILED" };
@@ -175,7 +191,7 @@ export function submitCheckpoint(
   marketId: number,
   sign: SignXdr = freighterSign,
 ): Promise<WriteResult> {
-  return write(wallet, "checkpoint", [u64(marketId)], sign);
+  return writeTo(NOVA_CONTRACT_ID, wallet, "checkpoint", [u64(marketId)], sign);
 }
 
 /** Wallet-signed: records this wallet as one unique signer. */
@@ -184,7 +200,7 @@ export function submitIntent(
   marketId: number,
   sign: SignXdr = freighterSign,
 ): Promise<WriteResult> {
-  return write(wallet, "signal_intent", [u64(marketId), addr(wallet)], sign);
+  return writeTo(NOVA_CONTRACT_ID, wallet, "signal_intent", [u64(marketId), addr(wallet)], sign);
 }
 
 export async function connectWallet(): Promise<string> {

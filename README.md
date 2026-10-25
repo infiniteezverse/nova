@@ -219,3 +219,32 @@ Authoritative addresses are in `testnet/deployment.json` (`"current": "v2"`). v2
 v2 runs the full path live: deposit, borrow, a price drop, a Degraded market from a real swap,
 and a liquidation that settles through `settle_transfer`. The vault-as-sender auth works on
 live testnet. The demo runbook is in `demo/RUNBOOK.md`.
+
+## Wallet demo and reset (live site)
+
+The site lets a viewer run the demo with their own Freighter wallet on testnet.
+
+**What a viewer does, in order**
+1. **Connect Freighter** on Testnet. Reads work without a wallet.
+2. **New run** creates a fresh market with the wallet as creator. Each run is a new market, so the
+   contracts never need resetting. The market is set to one signer, so one wallet can clear the intent gate.
+3. **Sign intent** records the wallet as the signer. The market moves to Ready.
+4. **Checkpoint** moves the market to Active when the health checks pass.
+5. **Swap into pool** sizes a swap from the live pool and drains quote depth. The market goes Degraded on
+   the next checkpoint.
+6. **Reclaim bond** returns the bond after the one-hour lock.
+
+**What the operator does**
+- `demo/fund-wallet.sh <G-address>`: sends TBOND (bonds) and TLITH (swaps) to a viewer's wallet. Each run needs
+  1,000 TBOND. A degrade swap needs roughly 1,400 TLITH, and that number grows with each degrade cycle.
+- `demo/refresh-oracle.sh`: the test oracle expires after 24 hours. Once stale, every market pauses for everyone.
+  Run this before each session.
+- `demo/reset-pool.sh`: adds liquidity back after a degrade swap, so a new market can activate.
+
+**Known limits**
+- The Freighter extension flow has not been run in a browser. The same functions were run on testnet with a local
+  key (`frontend/scripts/demo-check.ts`): a full run went Discovery → Ready → Active → Degraded.
+- Degrade swaps make the pool base-heavy, so each cycle needs a bigger swap. A proper rebalance (a reverse swap in
+  the reset script) is not built yet. Until it is, keep the TLITH supply topped up.
+- The oracle is an admin-set test feed. Price refreshes are operator actions.
+- Bonds lock for one hour, so bonds from earlier runs stay locked until then.

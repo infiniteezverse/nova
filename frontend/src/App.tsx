@@ -14,6 +14,25 @@ import {
   submitCheckpoint,
   submitIntent,
 } from "./lib/nova";
+import {
+  BASE_TOKEN_ID,
+  BOND_TOKEN_ID,
+  DEMO,
+  DemoRun,
+  balanceOf,
+  createDemoMarket,
+  degradeSwapAmount,
+  loadRuns,
+  reclaimBond,
+  saveRun,
+  swapToDegrade,
+} from "./lib/demo";
+
+const ORACLE_MAX_AGE_SECS = DEMO.maxOracleAgeSecs;
+
+function errMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
 
 type Snapshot = {
   market: MarketSummary;
@@ -46,6 +65,18 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [log, setLog] = useState<LogLine[]>([]);
   const [updated, setUpdated] = useState<Date | null>(null);
+  const [runs, setRuns] = useState<DemoRun[]>(() => loadRuns());
+  const [balances, setBalances] = useState<{ tlith: bigint; tbond: bigint } | null>(null);
+
+  useEffect(() => {
+    if (!wallet) {
+      setBalances(null);
+      return;
+    }
+    Promise.all([balanceOf(BASE_TOKEN_ID, wallet), balanceOf(BOND_TOKEN_ID, wallet)])
+      .then(([tlith, tbond]) => setBalances({ tlith, tbond }))
+      .catch(() => setBalances(null));
+  }, [wallet, busy]);
 
   const append = useCallback((text: string, href?: string) => {
     setLog((prev) => [{ at: ts(), text, href }, ...prev].slice(0, 50));
@@ -85,6 +116,53 @@ export default function App() {
       append("Wallet connected.");
     } catch (err) {
       append(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function onCreateRun() {
+    if (!wallet) return;
+    setBusy(true);
+    try {
+      const { result, marketId: created } = await createDemoMarket(wallet);
+      saveRun({ marketId: created, createdAt: new Date().toISOString(), wallet });
+      setRuns(loadRuns());
+      setMarketId(created);
+      append(`Run started: market ${created} created`, `${EXPLORER_TX}${result.hash}`);
+      await refresh();
+    } catch (err) {
+      append(`Create run failed: ${errMessage(err)}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onSwap() {
+    if (!wallet) return;
+    setBusy(true);
+    try {
+      const amount = await degradeSwapAmount();
+      append(`Swapping ${(Number(amount) / 1e7).toLocaleString()} TLITH into the pool`);
+      const res = await swapToDegrade(wallet, amount);
+      append(`Swap into the pool: ${res.status}`, `${EXPLORER_TX}${res.hash}`);
+      await refresh();
+    } catch (err) {
+      append(`Swap failed: ${errMessage(err)}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onReclaim() {
+    if (!wallet) return;
+    setBusy(true);
+    try {
+      const res = await reclaimBond(wallet, marketId);
+      append(`Reclaim bond: ${res.status}`, `${EXPLORER_TX}${res.hash}`);
+      await refresh();
+    } catch (err) {
+      append(`Reclaim failed: ${errMessage(err)}`);
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -257,6 +335,72 @@ export default function App() {
           </section>
         </>
       )}
+
+      <section className="panel">
+        <h2>Demo run (wallet)</h2>
+        {!wallet && (
+          <p className="dim small">
+            Connect Freighter on Testnet to run the demo yourself. Reads work without a wallet.
+          </p>
+        )}
+        {wallet && (
+          <p className="small">
+            Wallet <span className="mono">{wallet.slice(0, 6)}…{wallet.slice(-4)}</span>
+            {balances ? (
+              <>
+                {" "}· TLITH {(Number(balances.tlith) / 1e7).toLocaleString()} · TBOND{" "}
+                {(Number(balances.tbond) / 1e7).toLocaleString()}
+              </>
+            ) : (
+              " · balances unavailable"
+            )}
+          </p>
+        )}
+        {wallet && balances && balances.tbond < DEMO.bondAmount && (
+          <p className="warn small">
+            Creating a run needs 1,000 TBOND in this wallet. Ask the operator to fund it.
+          </p>
+        )}
+        {snapshot && snapshot.observation.oracle_timestamp > 0n &&
+          Date.now() / 1000 - Number(snapshot.observation.oracle_timestamp) > ORACLE_MAX_AGE_SECS && (
+            <p className="bad small">
+              The oracle price is stale, so the market is paused for everyone. The operator must
+              refresh it with demo/refresh-oracle.sh before a run can continue.
+            </p>
+          )}
+        <div className="row" style={{ marginTop: 8 }}>
+          <button onClick={onCreateRun} disabled={!wallet || busy}>
+            1 · New run (create market)
+          </button>
+          <button onClick={onIntent} disabled={!wallet || busy || snapshot?.market.state !== "Discovery"}>
+            2 · Sign intent
+          </button>
+          <button onClick={onCheckpoint} disabled={!wallet || busy}>
+            3 · Checkpoint
+          </button>
+          <button onClick={onSwap} disabled={!wallet || busy}>
+            4 · Swap into pool
+          </button>
+          <button onClick={onReclaim} disabled={!wallet || busy}>
+            5 · Reclaim bond
+          </button>
+        </div>
+        <p className="dim small" style={{ marginTop: 8 }}>
+          Steps 2 to 4 act on the market in the Market id field. Step 5 needs the one-hour lock to
+          have passed. Each run uses a new market, so a run can be tried again without a reset of the
+          contracts.
+        </p>
+        {runs.length > 0 && (
+          <div className="row small" style={{ marginTop: 8 }}>
+            <span className="dim">Your runs:</span>
+            {runs.map((r) => (
+              <button key={r.marketId} onClick={() => setMarketId(r.marketId)} disabled={busy}>
+                market {r.marketId}
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className="panel">
         <h2>Log</h2>

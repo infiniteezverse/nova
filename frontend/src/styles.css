@@ -250,3 +250,7 @@ a {
     animation: none !important;
   }
 }
+
+.warn {
+  color: var(--warn);
+}
