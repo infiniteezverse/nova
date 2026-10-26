@@ -259,99 +259,8 @@ export default function App() {
         </div>
       </section>
 
-      {loadError && (
-        <section className="panel error">
-          <p>Could not read market {marketId} from testnet.</p>
-          <p className="mono small">{loadError}</p>
-        </section>
-      )}
-
-      {snapshot && (
-        <>
-          <section className="panel">
-            <h2>1 · Market</h2>
-            <dl className="grid">
-              <dt>Symbol</dt>
-              <dd className="mono">{snapshot.market.symbol}</dd>
-              <dt>State</dt>
-              <dd className={`state ${snapshot.market.state.toLowerCase()}`}>
-                {snapshot.market.state}
-              </dd>
-              <dt>Unique signers</dt>
-              <dd>{snapshot.market.signers}</dd>
-              <dt>Composable shield · is_eligible()</dt>
-              <dd className={snapshot.eligible ? "ok" : "bad"}>
-                {snapshot.eligible ? "TRUE" : "FALSE"}
-              </dd>
-            </dl>
-          </section>
-
-          <section className="panel">
-            <h2>2 · Constitution (live read)</h2>
-            <p className="small bad">
-              Oracle source: TEST FEED. Admin-set, not a verified SEP-40 source. Not trustless.
-            </p>
-            <dl className="grid">
-              <dt>Live spread</dt>
-              <dd>{bpsToPercent(snapshot.observation.spread_bps)}</dd>
-              <dt>Live depth (quote side)</dt>
-              <dd>{formatUnits(snapshot.observation.depth)}</dd>
-              <dt>Oracle price</dt>
-              <dd>{formatUnits(snapshot.observation.price)}</dd>
-              <dt>Last health reading</dt>
-              <dd className={snapshot.observation.health === "Active" ? "ok" : "bad"}>
-                {snapshot.observation.health}
-              </dd>
-            </dl>
-            <h3>Capabilities</h3>
-            <ul className="caps">
-              <li className={snapshot.caps.reference_pricing ? "ok" : "bad"}>
-                Reference pricing: {snapshot.caps.reference_pricing ? "ON" : "OFF"}
-              </li>
-              <li className={snapshot.caps.spot_trading ? "ok" : "bad"}>
-                Spot trading: {snapshot.caps.spot_trading ? "ON" : "OFF"}
-              </li>
-              <li className={snapshot.caps.collateral_eligible ? "ok" : "bad"}>
-                Collateral: {snapshot.caps.collateral_eligible ? "ON" : "OFF"}
-              </li>
-            </ul>
-          </section>
-
-          <section className="panel">
-            <h2>3 · Permissionless actions</h2>
-            {!wallet && <p className="dim">Connect Freighter to sign transactions.</p>}
-            <div className="row">
-              <button onClick={onIntent} disabled={!wallet || busy || snapshot.market.state !== "Discovery"}>
-                Sign intent
-              </button>
-              <button onClick={onCheckpoint} disabled={!wallet || busy}>
-                Run checkpoint
-              </button>
-            </div>
-            <p className="dim small">
-              Intent is only accepted in Discovery. A checkpoint writes the current health to the ledger.
-            </p>
-          </section>
-
-          <section className="panel">
-            <h2>4 · Consumer vault guard</h2>
-            <p>
-              A lending pool calls <code>is_eligible()</code> before a deposit or borrow.
-              {snapshot.eligible
-                ? " Right now it would pass."
-                : " Right now it would revert."}
-            </p>
-            <p className="dim small">
-              The lending vault is deployed on testnet (CCMVZHUOGXOOM6ANLESIDX4S3KRQHKQQOIPIXIXS7UCQJFGOXJQYEV2N).
-              This panel shows the eligibility check the vault makes. It does not submit deposits or borrows.
-            </p>
-            {!snapshot.eligible && <p className="bad small">{stateMessage(snapshot.market.state)}</p>}
-          </section>
-        </>
-      )}
-
       <section className="panel">
-        <h2>Demo run (wallet)</h2>
+        <h2>1 · Create Market</h2>
         {!wallet && (
           <p className="dim small">
             Connect Freighter on Testnet to run the demo yourself. Reads work without a wallet.
@@ -384,29 +293,29 @@ export default function App() {
           )}
         <div className="row" style={{ marginTop: 8 }}>
           <button onClick={onCreateRun} disabled={!wallet || busy}>
-            1 · New run (create market)
+            Create Market
           </button>
           <button onClick={onIntent} disabled={!wallet || busy || snapshot?.market.state !== "Discovery"}>
-            2 · Sign intent
+            Sign intent
           </button>
           <button onClick={onCheckpoint} disabled={!wallet || busy}>
-            3 · Checkpoint
+            Checkpoint
           </button>
           <button onClick={onSwap} disabled={!wallet || busy}>
-            4 · Swap into pool
+            Swap into pool
           </button>
           <button onClick={onReclaim} disabled={!wallet || busy}>
-            5 · Reclaim bond
+            Reclaim bond
           </button>
         </div>
         <p className="dim small" style={{ marginTop: 8 }}>
-          Steps 2 to 4 act on the market in the Market id field. Step 5 needs the one-hour lock to
+          Sign intent, checkpoint and swap act on the market in the Market id field. Reclaim bond needs the one-hour lock to
           have passed. Each run uses a new market, so a run can be tried again without a reset of the
           contracts.
         </p>
         {runs.length > 0 && (
           <div className="row small" style={{ marginTop: 8 }}>
-            <span className="dim">Your runs:</span>
+            <span className="dim">Your Markets:</span>
             {runs.map((r) => (
               <button key={r.marketId} onClick={() => setMarketId(r.marketId)} disabled={busy}>
                 market {r.marketId}
@@ -415,6 +324,98 @@ export default function App() {
           </div>
         )}
       </section>
+
+      {loadError && (
+        <section className="panel error">
+          <p>Could not read market {marketId} from testnet.</p>
+          <p className="mono small">{loadError}</p>
+        </section>
+      )}
+
+      {snapshot && (
+        <>
+          <section className="panel">
+            <h2>2 · Permissionless actions</h2>
+            {!wallet && <p className="dim">Connect Freighter to sign transactions.</p>}
+            <div className="row">
+              <button onClick={onIntent} disabled={!wallet || busy || snapshot.market.state !== "Discovery"}>
+                Sign intent
+              </button>
+              <button onClick={onCheckpoint} disabled={!wallet || busy}>
+                Run checkpoint
+              </button>
+            </div>
+            <p className="dim small">
+              Intent is only accepted in Discovery. A checkpoint writes the current health to the ledger.
+            </p>
+          </section>
+
+          <section className="panel">
+            <h2>3 · Pool and oracle (shared inputs)</h2>
+            <p className="small bad">
+              Oracle source: TEST FEED. Admin-set, not a verified SEP-40 source. Not trustless.
+            </p>
+            <dl className="grid">
+              <dt>Live spread</dt>
+              <dd>{bpsToPercent(snapshot.observation.spread_bps)}</dd>
+              <dt>Live depth (quote side)</dt>
+              <dd>{formatUnits(snapshot.observation.depth)}</dd>
+              <dt>Oracle price</dt>
+              <dd>{formatUnits(snapshot.observation.price)}</dd>
+              <dt>Last health reading</dt>
+              <dd className={snapshot.observation.health === "Active" ? "ok" : "bad"}>
+                {snapshot.observation.health}
+              </dd>
+            </dl>
+            <h3>Capabilities</h3>
+            <ul className="caps">
+              <li className={snapshot.caps.reference_pricing ? "ok" : "bad"}>
+                Reference pricing: {snapshot.caps.reference_pricing ? "ON" : "OFF"}
+              </li>
+              <li className={snapshot.caps.spot_trading ? "ok" : "bad"}>
+                Spot trading: {snapshot.caps.spot_trading ? "ON" : "OFF"}
+              </li>
+              <li className={snapshot.caps.collateral_eligible ? "ok" : "bad"}>
+                Collateral: {snapshot.caps.collateral_eligible ? "ON" : "OFF"}
+              </li>
+            </ul>
+          </section>
+
+          <section className="panel">
+            <h2>4 · Market</h2>
+            <dl className="grid">
+              <dt>Symbol</dt>
+              <dd className="mono">{snapshot.market.symbol}</dd>
+              <dt>State</dt>
+              <dd className={`state ${snapshot.market.state.toLowerCase()}`}>
+                {snapshot.market.state}
+              </dd>
+              <dt>Unique signers</dt>
+              <dd>{snapshot.market.signers}</dd>
+              <dt>Composable shield · is_eligible()</dt>
+              <dd className={snapshot.eligible ? "ok" : "bad"}>
+                {snapshot.eligible ? "TRUE" : "FALSE"}
+              </dd>
+            </dl>
+          </section>
+
+          <section className="panel">
+            <h2>5 · Consumer vault guard</h2>
+            <p>
+              A lending pool calls <code>is_eligible()</code> before a deposit or borrow.
+              {snapshot.eligible
+                ? " Right now it would pass."
+                : " Right now it would revert."}
+            </p>
+            <p className="dim small">
+              The lending vault is deployed on testnet (CCMVZHUOGXOOM6ANLESIDX4S3KRQHKQQOIPIXIXS7UCQJFGOXJQYEV2N).
+              This panel shows the eligibility check the vault makes. It does not submit deposits or borrows.
+            </p>
+            {!snapshot.eligible && <p className="bad small">{stateMessage(snapshot.market.state)}</p>}
+          </section>
+        </>
+      )}
+
 
       <section className="panel">
         <h2>Log</h2>
