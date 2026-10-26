@@ -335,7 +335,25 @@ export default function App() {
       {snapshot && (
         <>
           <section className="panel">
-            <h2>2 · Permissionless actions</h2>
+            <h2>2 · Market</h2>
+            <dl className="grid">
+              <dt>Symbol</dt>
+              <dd className="mono">{snapshot.market.symbol}</dd>
+              <dt>State</dt>
+              <dd className={`state ${snapshot.market.state.toLowerCase()}`}>
+                {snapshot.market.state}
+              </dd>
+              <dt>Unique signers</dt>
+              <dd>{snapshot.market.signers}</dd>
+              <dt>Composable shield · is_eligible()</dt>
+              <dd className={snapshot.eligible ? "ok" : "bad"}>
+                {snapshot.eligible ? "TRUE" : "FALSE"}
+              </dd>
+            </dl>
+          </section>
+
+          <section className="panel">
+            <h2>3 · Permissionless actions</h2>
             {!wallet && <p className="dim">Connect Freighter to sign transactions.</p>}
             <div className="row">
               <button onClick={onIntent} disabled={!wallet || busy || snapshot.market.state !== "Discovery"}>
@@ -351,7 +369,7 @@ export default function App() {
           </section>
 
           <section className="panel">
-            <h2>3 · Pool and oracle (shared inputs)</h2>
+            <h2>4 · Pool and oracle (shared inputs)</h2>
             <p className="small bad">
               Oracle source: TEST FEED. Admin-set, not a verified SEP-40 source. Not trustless.
             </p>
@@ -379,24 +397,6 @@ export default function App() {
                 Collateral: {snapshot.caps.collateral_eligible ? "ON" : "OFF"}
               </li>
             </ul>
-          </section>
-
-          <section className="panel">
-            <h2>4 · Market</h2>
-            <dl className="grid">
-              <dt>Symbol</dt>
-              <dd className="mono">{snapshot.market.symbol}</dd>
-              <dt>State</dt>
-              <dd className={`state ${snapshot.market.state.toLowerCase()}`}>
-                {snapshot.market.state}
-              </dd>
-              <dt>Unique signers</dt>
-              <dd>{snapshot.market.signers}</dd>
-              <dt>Composable shield · is_eligible()</dt>
-              <dd className={snapshot.eligible ? "ok" : "bad"}>
-                {snapshot.eligible ? "TRUE" : "FALSE"}
-              </dd>
-            </dl>
           </section>
 
           <section className="panel">
