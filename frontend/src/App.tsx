@@ -252,11 +252,21 @@ export default function App() {
             />
           </label>
           <button onClick={refresh} disabled={busy}>Refresh</button>
+          <button onClick={onIntent} disabled={!wallet || busy || snapshot?.market.state !== "Discovery"}>
+            Sign intent
+          </button>
+          <button onClick={onCheckpoint} disabled={!wallet || busy}>
+            Run checkpoint
+          </button>
           <span className="dim mono small">contract {NOVA_CONTRACT_ID}</span>
           <span className="live">
             {updated ? `Live · updated ${updated.toLocaleTimeString()}` : "Connecting to testnet…"}
           </span>
         </div>
+        {!wallet && <p className="dim small" style={{ margin: "8px 0 0" }}>Connect Freighter to sign intents and checkpoints.</p>}
+        <p className="dim small" style={{ margin: "6px 0 0" }}>
+          Sign intent is only accepted in Discovery. Run checkpoint writes the current health to the ledger.
+        </p>
       </section>
 
       <section className="panel">
@@ -325,6 +335,27 @@ export default function App() {
         )}
       </section>
 
+      <section className="panel">
+        <h2>Log</h2>
+        {log.length === 0 && <p className="dim small">No actions yet.</p>}
+        <ul className="log">
+          {log.map((line, i) => (
+            <li key={i}>
+              <span className="dim mono">{line.at}</span>{" "}
+              {line.text}
+              {line.href && (
+                <>
+                  {" "}
+                  <a href={line.href} target="_blank" rel="noreferrer">
+                    tx
+                  </a>
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+      </section>
+
       {loadError && (
         <section className="panel error">
           <p>Could not read market {marketId} from testnet.</p>
@@ -352,24 +383,9 @@ export default function App() {
             </dl>
           </section>
 
-          <section className="panel">
-            <h2>3 · Permissionless actions</h2>
-            {!wallet && <p className="dim">Connect Freighter to sign transactions.</p>}
-            <div className="row">
-              <button onClick={onIntent} disabled={!wallet || busy || snapshot.market.state !== "Discovery"}>
-                Sign intent
-              </button>
-              <button onClick={onCheckpoint} disabled={!wallet || busy}>
-                Run checkpoint
-              </button>
-            </div>
-            <p className="dim small">
-              Intent is only accepted in Discovery. A checkpoint writes the current health to the ledger.
-            </p>
-          </section>
 
           <section className="panel">
-            <h2>4 · Pool and oracle (shared inputs)</h2>
+            <h2>3 · Pool and oracle (shared inputs)</h2>
             <p className="small bad">
               Oracle source: TEST FEED. Admin-set, not a verified SEP-40 source. Not trustless.
             </p>
@@ -400,7 +416,7 @@ export default function App() {
           </section>
 
           <section className="panel">
-            <h2>5 · Consumer vault guard</h2>
+            <h2>4 · Consumer vault guard</h2>
             <p>
               A lending pool calls <code>is_eligible()</code> before a deposit or borrow.
               {snapshot.eligible
@@ -417,26 +433,6 @@ export default function App() {
       )}
 
 
-      <section className="panel">
-        <h2>Log</h2>
-        {log.length === 0 && <p className="dim small">No actions yet.</p>}
-        <ul className="log">
-          {log.map((line, i) => (
-            <li key={i}>
-              <span className="dim mono">{line.at}</span>{" "}
-              {line.text}
-              {line.href && (
-                <>
-                  {" "}
-                  <a href={line.href} target="_blank" rel="noreferrer">
-                    tx
-                  </a>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
     </div>
   );
 }
