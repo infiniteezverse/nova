@@ -30,6 +30,21 @@ import {
 
 const ORACLE_MAX_AGE_SECS = DEMO.maxOracleAgeSecs;
 
+/** What a non-eligible market means, worded for the state it is actually in. */
+function stateMessage(state: string): string {
+  switch (state) {
+    case "Degraded":
+      return "Market is Degraded. Spot trading and new deposits or borrows are halted. Liquidations can still settle.";
+    case "Paused":
+      return "Market is Paused. The oracle is stale or missing, so the market is halted for everyone.";
+    case "Discovery":
+    case "Ready":
+      return "Market is not active yet. Intents move it forward, and a checkpoint activates it once the pool is healthy.";
+    default:
+      return `Market is ${state}. New deposits and borrows are refused.`;
+  }
+}
+
 function errMessage(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
@@ -43,7 +58,6 @@ type Snapshot = {
 
 type LogLine = { at: string; text: string; href?: string };
 
-const ORACLE_STALE_MSG = "Oracle or liquidity check failed. Market is effectively Paused.";
 
 function ts(): string {
   return new Date().toLocaleTimeString();
@@ -331,7 +345,7 @@ export default function App() {
               The lending vault is deployed on testnet (CCMVZHUOGXOOM6ANLESIDX4S3KRQHKQQOIPIXIXS7UCQJFGOXJQYEV2N).
               This panel shows the eligibility check the vault makes. It does not submit deposits or borrows.
             </p>
-            {!snapshot.eligible && <p className="bad small">{ORACLE_STALE_MSG}</p>}
+            {!snapshot.eligible && <p className="bad small">{stateMessage(snapshot.market.state)}</p>}
           </section>
         </>
       )}
